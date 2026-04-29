@@ -1,0 +1,21 @@
+# Build folders
+[Bb]in/
+[Oo]bj/
+
+# IDE / OS files
+.vs/
+.vscode/
+.idea/
+*.user
+*.userosscache
+*.sln.docstates
+
+# .NET Specific
+*.designer.cs
+*.design.cs
+*.log
+*.tmp
+
+# User-specific files
+.env
+appsettings.Development.json

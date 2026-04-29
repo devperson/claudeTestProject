@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="claudeTestProject.Tests\**" />
+    <Compile Remove="CommonServices\**" />
+    <EmbeddedResource Remove="claudeTestProject.Tests\**" />
+    <EmbeddedResource Remove="CommonServices\**" />
+    <None Remove="claudeTestProject.Tests\**" />
+    <None Remove="CommonServices\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="CommonServices\CommonServices.csproj" />
+  </ItemGroup>
+
+</Project>

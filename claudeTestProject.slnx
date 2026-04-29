@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="claudeTestProject.csproj" />
+  <Project Path="CommonServices/CommonServices.csproj" />
+  <Project Path="claudeTestProject.Tests/claudeTestProject.Tests.csproj" />
+</Solution>
