@@ -40,7 +40,7 @@ jobs:
 
       - name: Enforce 80% line coverage threshold
         run: |
-          LINE_RATE=$(grep -oP 'line-rate="\K[^"]+' coverage/report/*.cobertura.xml | head -1)
+          LINE_RATE=$(grep -oP 'line-rate="\K[^"]+' coverage/report/Cobertura.xml | head -1)
           PCT=$(awk "BEGIN { printf \"%.0f\", $LINE_RATE * 100 }")
           echo "Line coverage: $PCT%"
           if [ "$PCT" -lt 80 ]; then
