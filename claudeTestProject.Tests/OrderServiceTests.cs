@@ -414,6 +414,28 @@ namespace claudeTestProject.Tests
         }
 
         [Fact]
+        public void GenerateOrderSummary_NegativeTaxRate_ThrowsException()
+        {
+            // Arrange
+            decimal baseAmount = 100m;
+            decimal taxRate = -0.08m;
+
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => _orderService.GenerateOrderSummary(baseAmount, taxRate));
+        }
+
+        [Fact]
+        public void GenerateOrderSummary_TaxRateGreaterThanOne_ThrowsException()
+        {
+            // Arrange
+            decimal baseAmount = 100m;
+            decimal taxRate = 1.5m;
+
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => _orderService.GenerateOrderSummary(baseAmount, taxRate));
+        }
+
+        [Fact]
         public void GenerateOrderSummary_AllKeysPresentInDictionary_VerifyKeys()
         {
             // Arrange
