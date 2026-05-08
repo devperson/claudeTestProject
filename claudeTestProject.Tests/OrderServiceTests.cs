@@ -347,7 +347,7 @@ namespace claudeTestProject.Tests
 
             // Assert
             Assert.NotNull(summary);
-            Assert.Equal(7, summary.Count);
+            Assert.Equal(8, summary.Count);
             Assert.Equal(100m, summary["Subtotal"]);
             Assert.Equal(10m, summary["Discount"]);
             Assert.Equal(90m, summary["Subtotal After Discount"]);
@@ -463,6 +463,7 @@ namespace claudeTestProject.Tests
             Assert.Contains("Discount", summary.Keys);
             Assert.Contains("Subtotal After Discount", summary.Keys);
             Assert.Contains("Bulk Discount", summary.Keys);
+            Assert.Contains("Priority Fee", summary.Keys);
             Assert.Contains("Tax", summary.Keys);
             Assert.Contains("Shipping", summary.Keys);
             Assert.Contains("Total", summary.Keys);
@@ -539,6 +540,39 @@ namespace claudeTestProject.Tests
 
         #endregion
 
+        #region GetOrderStatus Priority Tests
+
+        [Fact]
+        public void GetOrderStatus_PriorityStage2_ReturnsUrgentProcessing()
+        {
+            // Act
+            string result = _orderService.GetOrderStatus(2, isPriority: true);
+
+            // Assert
+            Assert.Equal("Urgent Processing", result);
+        }
+
+        [Fact]
+        public void GetOrderStatus_NonPriorityStage2_ReturnsProcessing()
+        {
+            // Act
+            string result = _orderService.GetOrderStatus(2, isPriority: false);
+
+            // Assert
+            Assert.Equal("Processing", result);
+        }
+
+        [Fact]
+        public void GetOrderStatus_PriorityStage1_ReturnsPending()
+        {
+            // Priority only affects stage 2
+            string result = _orderService.GetOrderStatus(1, isPriority: true);
+
+            Assert.Equal("Pending", result);
+        }
+
+        #endregion
+
         #region GenerateOrderSummary with Bulk Discount Tests
 
         [Fact]
@@ -592,6 +626,67 @@ namespace claudeTestProject.Tests
             // Act & Assert
             Assert.Throws<ArgumentException>(() =>
                 _orderService.GenerateOrderSummary(baseAmount, taxRate, 0, quantity, unitPrice));
+        }
+
+        #endregion
+
+        #region GenerateOrderSummary Priority Processing Tests
+
+        [Fact]
+        public void GenerateOrderSummary_PriorityOrder_AddsPriorityFee()
+        {
+            // Arrange
+            decimal baseAmount = 100m;
+            decimal taxRate = 0.10m;
+
+            // Act
+            var summary = _orderService.GenerateOrderSummary(baseAmount, taxRate, isPriority: true);
+
+            // Assert
+            Assert.Equal(9.99m, summary["Priority Fee"]);
+            Assert.Equal(119.99m, summary["Total"]); // 100 + 10 tax + 0 shipping + 9.99
+        }
+
+        [Fact]
+        public void GenerateOrderSummary_NonPriorityOrder_NoPriorityFee()
+        {
+            // Arrange
+            decimal baseAmount = 100m;
+            decimal taxRate = 0.10m;
+
+            // Act
+            var summary = _orderService.GenerateOrderSummary(baseAmount, taxRate);
+
+            // Assert
+            Assert.Equal(0m, summary["Priority Fee"]);
+            Assert.Equal(110m, summary["Total"]);
+        }
+
+        [Fact]
+        public void GenerateOrderSummary_PriorityOrder_BelowMinAmount_ThrowsException()
+        {
+            // Arrange — baseAmount $15 is below the $20 minimum for priority
+            decimal baseAmount = 15m;
+            decimal taxRate = 0.10m;
+
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() =>
+                _orderService.GenerateOrderSummary(baseAmount, taxRate, isPriority: true));
+        }
+
+        [Fact]
+        public void GenerateOrderSummary_PriorityOrder_ExactMinAmount_AppliesFee()
+        {
+            // Arrange — exactly $20 should be allowed
+            decimal baseAmount = 20m;
+            decimal taxRate = 0m;
+
+            // Act
+            var summary = _orderService.GenerateOrderSummary(baseAmount, taxRate, isPriority: true);
+
+            // Assert
+            Assert.Equal(9.99m, summary["Priority Fee"]);
+            Assert.Equal(35.98m, summary["Total"]); // 20 - 0 discount + 0 tax + 5.99 shipping + 9.99
         }
 
         #endregion

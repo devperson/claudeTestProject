@@ -57,13 +57,14 @@ namespace CommonServices
         /// Gets the order status based on processing stage.
         /// </summary>
         /// <param name="stage">The processing stage (1=Pending, 2=Processing, 3=Shipped, 4=Delivered)</param>
+        /// <param name="isPriority">Whether the order has priority processing enabled</param>
         /// <returns>The status string</returns>
-        public string GetOrderStatus(int stage)
+        public string GetOrderStatus(int stage, bool isPriority = false)
         {
             return stage switch
             {
                 1 => "Pending",
-                2 => "Processing",
+                2 => isPriority ? "Urgent Processing" : "Processing",
                 3 => "Shipped",
                 4 => "Delivered",
                 _ => "Unknown"
@@ -125,8 +126,9 @@ namespace CommonServices
         /// <param name="discountAmount">The discount amount (if any)</param>
         /// <param name="quantity">The number of units ordered (used to calculate bulk discount)</param>
         /// <param name="unitPrice">The price per unit (used to calculate bulk discount)</param>
+        /// <param name="isPriority">Whether to apply a $9.99 priority processing fee</param>
         /// <returns>A dictionary containing itemized costs</returns>
-        public Dictionary<string, decimal> GenerateOrderSummary(decimal baseAmount, decimal taxRate, decimal discountAmount = 0, int quantity = 0, decimal unitPrice = 0m)
+        public Dictionary<string, decimal> GenerateOrderSummary(decimal baseAmount, decimal taxRate, decimal discountAmount = 0, int quantity = 0, decimal unitPrice = 0m, bool isPriority = false)
         {
             if (!IsValidOrderAmount(baseAmount))
             {
@@ -141,6 +143,11 @@ namespace CommonServices
             if (discountAmount < 0 || discountAmount > baseAmount)
             {
                 throw new ArgumentException("Discount amount must be between 0 and base amount", nameof(discountAmount));
+            }
+
+            if (isPriority && baseAmount < 20m)
+            {
+                throw new ArgumentException("Priority processing requires a minimum order amount of $20", nameof(isPriority));
             }
 
             decimal afterDiscount = baseAmount - discountAmount;
@@ -158,7 +165,8 @@ namespace CommonServices
             decimal afterAllDiscounts = afterDiscount - bulkDiscount;
             decimal tax = afterAllDiscounts * taxRate;
             decimal shipping = CalculateShippingCost(afterAllDiscounts);
-            decimal total = afterAllDiscounts + tax + shipping;
+            decimal priorityFee = isPriority ? 9.99m : 0m;
+            decimal total = afterAllDiscounts + tax + shipping + priorityFee;
 
             return new Dictionary<string, decimal>
             {
@@ -168,6 +176,7 @@ namespace CommonServices
                 { "Bulk Discount", bulkDiscount },
                 { "Tax", tax },
                 { "Shipping", shipping },
+                { "Priority Fee", priorityFee },
                 { "Total", total }
             };
         }
