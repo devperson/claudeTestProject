@@ -92,13 +92,41 @@ namespace CommonServices
         }
 
         /// <summary>
+        /// Calculates a 10% bulk discount when quantity is 3 or more.
+        /// </summary>
+        /// <param name="quantity">The number of units ordered</param>
+        /// <param name="unitPrice">The price per unit</param>
+        /// <returns>The bulk discount amount (0 if quantity is less than 3)</returns>
+        public decimal CalculateBulkDiscount(int quantity, decimal unitPrice)
+        {
+            if (quantity <= 0)
+            {
+                throw new ArgumentException("Quantity must be positive", nameof(quantity));
+            }
+
+            if (unitPrice <= 0)
+            {
+                throw new ArgumentException("Unit price must be positive", nameof(unitPrice));
+            }
+
+            if (quantity >= 3)
+            {
+                return quantity * unitPrice * 0.10m;
+            }
+
+            return 0m;
+        }
+
+        /// <summary>
         /// Generates an order summary with all costs.
         /// </summary>
         /// <param name="baseAmount">The base order amount</param>
         /// <param name="taxRate">The tax rate as a decimal</param>
         /// <param name="discountAmount">The discount amount (if any)</param>
+        /// <param name="quantity">The number of units ordered (used to calculate bulk discount)</param>
+        /// <param name="unitPrice">The price per unit (used to calculate bulk discount)</param>
         /// <returns>A dictionary containing itemized costs</returns>
-        public Dictionary<string, decimal> GenerateOrderSummary(decimal baseAmount, decimal taxRate, decimal discountAmount = 0)
+        public Dictionary<string, decimal> GenerateOrderSummary(decimal baseAmount, decimal taxRate, decimal discountAmount = 0, int quantity = 0, decimal unitPrice = 0m)
         {
             if (!IsValidOrderAmount(baseAmount))
             {
@@ -116,15 +144,28 @@ namespace CommonServices
             }
 
             decimal afterDiscount = baseAmount - discountAmount;
-            decimal tax = afterDiscount * taxRate;
-            decimal shipping = CalculateShippingCost(afterDiscount);
-            decimal total = afterDiscount + tax + shipping;
+
+            decimal bulkDiscount = 0m;
+            if (quantity > 0 && unitPrice > 0)
+            {
+                bulkDiscount = CalculateBulkDiscount(quantity, unitPrice);
+                if (bulkDiscount > afterDiscount)
+                {
+                    throw new ArgumentException("Bulk discount cannot exceed the subtotal after discount", nameof(quantity));
+                }
+            }
+
+            decimal afterAllDiscounts = afterDiscount - bulkDiscount;
+            decimal tax = afterAllDiscounts * taxRate;
+            decimal shipping = CalculateShippingCost(afterAllDiscounts);
+            decimal total = afterAllDiscounts + tax + shipping;
 
             return new Dictionary<string, decimal>
             {
                 { "Subtotal", baseAmount },
                 { "Discount", discountAmount },
                 { "Subtotal After Discount", afterDiscount },
+                { "Bulk Discount", bulkDiscount },
                 { "Tax", tax },
                 { "Shipping", shipping },
                 { "Total", total }

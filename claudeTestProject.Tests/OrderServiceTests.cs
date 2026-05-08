@@ -347,7 +347,7 @@ namespace claudeTestProject.Tests
 
             // Assert
             Assert.NotNull(summary);
-            Assert.Equal(6, summary.Count);
+            Assert.Equal(7, summary.Count);
             Assert.Equal(100m, summary["Subtotal"]);
             Assert.Equal(10m, summary["Discount"]);
             Assert.Equal(90m, summary["Subtotal After Discount"]);
@@ -462,9 +462,136 @@ namespace claudeTestProject.Tests
             Assert.Contains("Subtotal", summary.Keys);
             Assert.Contains("Discount", summary.Keys);
             Assert.Contains("Subtotal After Discount", summary.Keys);
+            Assert.Contains("Bulk Discount", summary.Keys);
             Assert.Contains("Tax", summary.Keys);
             Assert.Contains("Shipping", summary.Keys);
             Assert.Contains("Total", summary.Keys);
+        }
+
+        #endregion
+
+        #region CalculateBulkDiscount Tests
+
+        [Fact]
+        public void CalculateBulkDiscount_QuantityBelow3_ReturnsZero()
+        {
+            // Arrange
+            int quantity = 2;
+            decimal unitPrice = 50m;
+
+            // Act
+            decimal result = _orderService.CalculateBulkDiscount(quantity, unitPrice);
+
+            // Assert
+            Assert.Equal(0m, result);
+        }
+
+        [Fact]
+        public void CalculateBulkDiscount_QuantityExactly3_ReturnsDiscount()
+        {
+            // Arrange
+            int quantity = 3;
+            decimal unitPrice = 50m;
+            decimal expected = 15m; // 3 * 50 * 0.10
+
+            // Act
+            decimal result = _orderService.CalculateBulkDiscount(quantity, unitPrice);
+
+            // Assert
+            Assert.Equal(expected, result);
+        }
+
+        [Fact]
+        public void CalculateBulkDiscount_QuantityAbove3_ReturnsDiscount()
+        {
+            // Arrange
+            int quantity = 5;
+            decimal unitPrice = 40m;
+            decimal expected = 20m; // 5 * 40 * 0.10
+
+            // Act
+            decimal result = _orderService.CalculateBulkDiscount(quantity, unitPrice);
+
+            // Assert
+            Assert.Equal(expected, result);
+        }
+
+        [Fact]
+        public void CalculateBulkDiscount_ZeroQuantity_ThrowsException()
+        {
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => _orderService.CalculateBulkDiscount(0, 50m));
+        }
+
+        [Fact]
+        public void CalculateBulkDiscount_NegativeQuantity_ThrowsException()
+        {
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => _orderService.CalculateBulkDiscount(-1, 50m));
+        }
+
+        [Fact]
+        public void CalculateBulkDiscount_ZeroUnitPrice_ThrowsException()
+        {
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => _orderService.CalculateBulkDiscount(3, 0m));
+        }
+
+        #endregion
+
+        #region GenerateOrderSummary with Bulk Discount Tests
+
+        [Fact]
+        public void GenerateOrderSummary_WithBulkDiscount_AppliesCorrectly()
+        {
+            // Arrange — 5 units @ $30 = $150 base; bulk discount = 5 * 30 * 0.10 = $15
+            decimal baseAmount = 150m;
+            decimal taxRate = 0.10m;
+            int quantity = 5;
+            decimal unitPrice = 30m;
+
+            // Act
+            var summary = _orderService.GenerateOrderSummary(baseAmount, taxRate, 0, quantity, unitPrice);
+
+            // Assert
+            Assert.Equal(150m, summary["Subtotal"]);
+            Assert.Equal(0m,   summary["Discount"]);
+            Assert.Equal(150m, summary["Subtotal After Discount"]);
+            Assert.Equal(15m,  summary["Bulk Discount"]);   // 5 * 30 * 0.10
+            Assert.Equal(13.5m, summary["Tax"]);            // 135 * 0.10
+            Assert.Equal(0m,   summary["Shipping"]);        // 135 >= 50
+            Assert.Equal(148.5m, summary["Total"]);         // 135 + 13.5
+        }
+
+        [Fact]
+        public void GenerateOrderSummary_NoBulkDiscount_WhenQuantityBelow3()
+        {
+            // Arrange
+            decimal baseAmount = 100m;
+            decimal taxRate = 0.10m;
+            int quantity = 2;
+            decimal unitPrice = 30m;
+
+            // Act
+            var summary = _orderService.GenerateOrderSummary(baseAmount, taxRate, 0, quantity, unitPrice);
+
+            // Assert
+            Assert.Equal(0m, summary["Bulk Discount"]);
+            Assert.Equal(110m, summary["Total"]); // 100 + 10 tax, free shipping
+        }
+
+        [Fact]
+        public void GenerateOrderSummary_BulkDiscountExceedsSubtotal_ThrowsException()
+        {
+            // Arrange — bulk discount (3 * 100 * 0.10 = $30) > baseAmount ($20)
+            decimal baseAmount = 20m;
+            decimal taxRate = 0.10m;
+            int quantity = 3;
+            decimal unitPrice = 100m;
+
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() =>
+                _orderService.GenerateOrderSummary(baseAmount, taxRate, 0, quantity, unitPrice));
         }
 
         #endregion
