@@ -82,7 +82,7 @@ namespace CommonServices
                 throw new ArgumentException("Shipping method cannot be empty", nameof(shippingMethod));
             }
 
-            return shippingMethod.ToLower() switch
+            return shippingMethod.Trim().ToLower() switch
             {
                 "standard" => 5,
                 "express" => 2,
