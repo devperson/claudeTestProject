@@ -78,6 +78,34 @@ namespace claudeTestProject.Tests
         }
 
         [Fact]
+        public void CalculateDiscount_ZeroAmount_ThrowsException()
+        {
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => _discountService.CalculateDiscount(0m));
+        }
+
+        [Fact]
+        public void CalculateDiscount_NegativeAmount_ThrowsException()
+        {
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => _discountService.CalculateDiscount(-50m));
+        }
+
+        [Fact]
+        public void GetFinalPrice_ZeroAmount_ThrowsException()
+        {
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => _discountService.GetFinalPrice(0m));
+        }
+
+        [Fact]
+        public void GetFinalPrice_NegativeAmount_ThrowsException()
+        {
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() => _discountService.GetFinalPrice(-50m));
+        }
+
+        [Fact]
         public void GetFinalPrice_OrderUnder100_ReturnsSameAmount()
         {
             // Arrange
