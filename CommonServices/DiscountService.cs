@@ -12,6 +12,11 @@ namespace CommonServices
         /// <returns>The discount amount (0 if order is $100 or less)</returns>
         public decimal CalculateDiscount(decimal orderAmount)
         {
+            if (orderAmount <= 0)
+            {
+                throw new ArgumentException("Order amount must be positive", nameof(orderAmount));
+            }
+
             if (orderAmount > DiscountThreshold)
             {
                 return orderAmount * DiscountPercentage;
