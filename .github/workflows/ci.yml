@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [master]
 
+permissions:
+  pull-requests: write
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -19,5 +22,34 @@ jobs:
       - name: Build
         run: dotnet build
 
-      - name: Test
-        run: dotnet test claudeTestProject.Tests/ --no-build --logger "console;verbosity=normal"
+      - name: Test with coverage
+        run: |
+          dotnet test claudeTestProject.Tests/ \
+            --no-build \
+            --logger "console;verbosity=normal" \
+            --collect:"XPlat Code Coverage" \
+            --settings claudeTestProject.Tests/coverlet.runsettings \
+            --results-directory ./coverage
+
+      - name: Generate coverage report
+        uses: danielpalme/ReportGenerator-GitHub-Action@5
+        with:
+          reports: coverage/**/coverage.cobertura.xml
+          targetdir: coverage/report
+          reporttypes: MarkdownSummaryGithub;Cobertura
+
+      - name: Enforce 80% line coverage threshold
+        run: |
+          LINE_RATE=$(grep -oP 'line-rate="\K[^"]+' coverage/report/*.cobertura.xml | head -1)
+          PCT=$(awk "BEGIN { printf \"%.0f\", $LINE_RATE * 100 }")
+          echo "Line coverage: $PCT%"
+          if [ "$PCT" -lt 80 ]; then
+            echo "Coverage $PCT% is below the required 80% threshold."
+            exit 1
+          fi
+
+      - name: Post PR comment
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          path: coverage/report/SummaryGithub.md
