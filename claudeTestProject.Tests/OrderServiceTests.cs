@@ -287,6 +287,19 @@ namespace claudeTestProject.Tests
             Assert.Equal(5, result);
         }
 
+        [Theory]
+        [InlineData(" standard", 5)]
+        [InlineData("express ", 2)]
+        [InlineData(" overnight ", 1)]
+        public void GetEstimatedDeliveryDays_WhitespacePadded_ReturnsCorrectDays(string method, int expected)
+        {
+            // Act
+            int result = _orderService.GetEstimatedDeliveryDays(method);
+
+            // Assert
+            Assert.Equal(expected, result);
+        }
+
         [Fact]
         public void GetEstimatedDeliveryDays_InvalidMethod_ThrowsException()
         {
