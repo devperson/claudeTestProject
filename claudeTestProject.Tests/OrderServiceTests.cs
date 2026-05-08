@@ -19,7 +19,7 @@ namespace claudeTestProject.Tests
             bool result = _orderService.IsValidOrderAmount(orderAmount);
 
             // Assert
-            Assert.True(result);
+            Assert.True(result); 
         }
 
         [Fact]
