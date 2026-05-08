@@ -152,6 +152,11 @@ namespace CommonServices
 
             decimal afterDiscount = baseAmount - discountAmount;
 
+            if ((quantity > 0) != (unitPrice > 0))
+            {
+                throw new ArgumentException("Both quantity and unitPrice must be supplied together to apply a bulk discount", nameof(quantity));
+            }
+
             decimal bulkDiscount = 0m;
             if (quantity > 0 && unitPrice > 0)
             {

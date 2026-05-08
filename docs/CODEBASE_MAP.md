@@ -235,7 +235,7 @@ sequenceDiagram
 | `DiscountService` | Threshold is **strictly greater than** `$100` — an order of exactly `$100.00` gets **zero discount**. |
 | `OrderService.GenerateOrderSummary` | Tax is computed on the **post-discount** subtotal, not the original base amount. |
 | `OrderService.GenerateOrderSummary` | Shipping uses the **post-all-discounts** amount — discounts can push the order under $50 and trigger the $5.99 charge. |
-| `OrderService.GenerateOrderSummary` | Bulk discount is only computed when **both** `quantity > 0` and `unitPrice > 0` are supplied; omitting either silently skips the bulk discount. |
+| `OrderService.GenerateOrderSummary` | Bulk discount requires **both** `quantity` and `unitPrice` — passing one without the other throws `ArgumentException`. Omitting both (defaults) silently skips the discount. |
 | `OrderService.GenerateOrderSummary` | Priority fee is added **after** tax and shipping are calculated — it does not affect the taxable base. |
 | `OrderService.GetOrderStatus` | Accepts any `int` (including negative); returns `"Unknown"` without throwing. |
 | `claudeTestProject.slnx` | Tooling that only scans for `.sln` may not detect the `.slnx` solution file. |

@@ -615,6 +615,22 @@ namespace claudeTestProject.Tests
         }
 
         [Fact]
+        public void GenerateOrderSummary_QuantityWithoutUnitPrice_ThrowsException()
+        {
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() =>
+                _orderService.GenerateOrderSummary(100m, 0.10m, quantity: 5));
+        }
+
+        [Fact]
+        public void GenerateOrderSummary_UnitPriceWithoutQuantity_ThrowsException()
+        {
+            // Act & Assert
+            Assert.Throws<ArgumentException>(() =>
+                _orderService.GenerateOrderSummary(100m, 0.10m, unitPrice: 30m));
+        }
+
+        [Fact]
         public void GenerateOrderSummary_BulkDiscountExceedsSubtotal_ThrowsException()
         {
             // Arrange — bulk discount (3 * 100 * 0.10 = $30) > baseAmount ($20)
