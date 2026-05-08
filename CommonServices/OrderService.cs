@@ -105,6 +105,11 @@ namespace CommonServices
                 throw new ArgumentException("Base amount must be positive", nameof(baseAmount));
             }
 
+            if (taxRate < 0 || taxRate > 1)
+            {
+                throw new ArgumentException("Tax rate must be between 0 and 1", nameof(taxRate));
+            }
+
             if (discountAmount < 0 || discountAmount > baseAmount)
             {
                 throw new ArgumentException("Discount amount must be between 0 and base amount", nameof(discountAmount));
